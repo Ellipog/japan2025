@@ -18,6 +18,7 @@ export default function Home() {
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
   const [location, setLocation] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchPosts();
@@ -25,10 +26,13 @@ export default function Home() {
 
   const fetchPosts = async () => {
     try {
+      setIsLoading(true);
       const response = await axios.get("/api/posts");
       setPosts(response.data);
     } catch (error) {
       console.error("Error fetching posts:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -129,30 +133,46 @@ export default function Home() {
       </form>
 
       <div className="space-y-4">
-        {posts.map((post) => (
-          <div key={post._id} className="pl-8 ml-7 relative">
-            <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
-            <div className="flex justify-start items-baseline -ml-6">
-              <h2 className="text-xl font-semibold">{post.title}</h2>
-              <div className="text-md text-gray-400 ml-2">{post.author}</div>
-            </div>
-            <p className="text-gray-700 mb-2 -ml-6">
-              <LetterText className="absolute mt-[0.3rem] -left-6 w-4 h-4 text-gray-400 transform" />
-              {post.content[0].content}
-            </p>
-            <MapPin className="absolute mt-[0.3rem] -left-6 w-4 h-4 text-gray-400 transform" />
-            <span className="text-sm text-gray-500 pt-0.5 -ml-6">
-              {post.location}
-            </span>
-            <Clock className="absolute mt-[0.1rem] -left-6 w-4 h-4 text-gray-400 transform" />
-            <span className="text-sm text-gray-500 mb-2 flex -ml-6">
-              {new Date(post.timestamp).toLocaleDateString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
-        ))}
+        {isLoading
+          ? // Skeleton loading blocks
+            Array.from({ length: posts.length || 1 }).map((_, index) => (
+              <div key={index} className="pl-8 ml-7 relative animate-pulse">
+                <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="flex justify-start items-baseline -ml-6">
+                  <div className="h-6 w-48 bg-gray-200 rounded" />
+                  <div className="h-4 w-24 bg-gray-200 rounded ml-2" />
+                </div>
+                <div className="h-4 w-full bg-gray-200 rounded mt-2 -ml-6" />
+                <div className="h-4 w-32 bg-gray-200 rounded mt-2 -ml-6" />
+                <div className="h-4 w-24 bg-gray-200 rounded mt-2 -ml-6" />
+              </div>
+            ))
+          : posts.map((post) => (
+              <div key={post._id} className="pl-8 ml-7 relative">
+                <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="flex justify-start items-baseline -ml-6">
+                  <h2 className="text-xl font-semibold">{post.title}</h2>
+                  <div className="text-md text-gray-400 ml-2">
+                    {post.author}
+                  </div>
+                </div>
+                <p className="text-gray-700 mb-2 -ml-6">
+                  <LetterText className="absolute mt-[0.3rem] -left-6 w-4 h-4 text-gray-400 transform" />
+                  {post.content[0].content}
+                </p>
+                <MapPin className="absolute mt-[0.3rem] -left-6 w-4 h-4 text-gray-400 transform" />
+                <span className="text-sm text-gray-500 pt-0.5 -ml-6">
+                  {post.location}
+                </span>
+                <Clock className="absolute mt-[0.1rem] -left-6 w-4 h-4 text-gray-400 transform" />
+                <span className="text-sm text-gray-500 mb-2 flex -ml-6">
+                  {new Date(post.timestamp).toLocaleDateString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            ))}
       </div>
     </div>
   );
